@@ -1,0 +1,47 @@
+version: '3.7'
+
+services:
+  app:
+    container_name: spring-projectmanager-api
+    build: .
+    ports:
+      - "8080:8080"
+    depends_on:
+      - db
+      - flyway
+      # - redis
+  db:
+    container_name: spring-projectmanager-db
+    image: postgres:13
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: spring-projectmanager-db
+    volumes:
+      - ./.docker/postgresql:/var/lib/postgresql/data
+    logging:
+      options:
+        max-size: 10m
+        max-file: "3"
+
+  flyway:
+    image: flyway/flyway
+    volumes:
+      - ./src/main/resources/db/migration:/flyway/sql
+    command: -url=jdbc:postgresql://db:5432/spring-projectmanager-db -user=postgres -password=password repair migrate
+    depends_on:
+      - db
+  # redis:
+  #   image: redis
+  #   ports:
+  #     - "6380:6379"
+  #   volumes:
+  #     - redisdata:/data
+volumes:
+  postgresql:
+    driver_opts:
+      type: tmpfs
+      device: tmpfs
+  # redisdata:
